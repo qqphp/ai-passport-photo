@@ -2,7 +2,6 @@ import fs from 'fs/promises';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import ViapiUtil from '@alicloud/viapi-utils';
-import * as Util from '@alicloud/tea-util';
 
 // 临时文件目录
 const TEMP_DIR = path.join(process.cwd(), 'temp');
@@ -43,24 +42,12 @@ export async function uploadToOSS(filePath: string): Promise<string> {
     throw new Error('Missing Alibaba Cloud credentials');
   }
 
-  // 配置 ViapiUtil 的上传选项
+  // 配置上传重试次数
   const uploadOptions = {
-    timeout: 30000,  // 30秒超时
     retryTimes: 3,   // 重试3次
   };
 
-  // 使用 runtime 选项进行上传
-  const runtime = new Util.RuntimeOptions({
-    readTimeout: 30000,     // 读取超时 30 秒
-    connectTimeout: 10000,  // 连接超时 10 秒
-    retryable: true,       // 允许重试
-    maxRetries: 3,         // 最大重试次数
-  });
-
   try {
-    // 初始化上传工具
-    ViapiUtil.InitClient(accessKeyId, accessKeySecret);
-    
     // 执行上传，带重试机制
     let lastError;
     for (let i = 0; i < uploadOptions.retryTimes; i++) {
@@ -68,8 +55,7 @@ export async function uploadToOSS(filePath: string): Promise<string> {
         const ossUrl = await ViapiUtil.upload(
           accessKeyId,
           accessKeySecret,
-          filePath,
-          uploadOptions
+          filePath
         );
         return ossUrl;
       } catch (error) {

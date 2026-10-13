@@ -13,27 +13,28 @@
 
 ## 技术栈
 
-- Node.js 20.18.1（当前本地运行版本）
+- Node.js 24（项目固定版本：24.21.0 LTS）
 - Next.js 15.1.2、React 19、TypeScript
 - Tailwind CSS、Lucide 图标、Framer Motion
 - 阿里云图像分割 SDK、Sharp
 
 ## Windows 本地运行
 
-安装 nvm-windows 后，在 PowerShell 中安装并切换 Node：
+安装 nvm-windows 后，在 PowerShell 中安装项目所需的 Node：
 
 ```powershell
-nvm install 20.18.1
-nvm use 20.18.1
-node --version
+nvm install 24.21.0
 ```
 
-进入项目目录并安装依赖：
+进入项目目录，确认 Node 版本为 `v24.21.0` 后安装依赖：
 
 ```powershell
 cd E:\codex\ai-passport-photo
+node --version
 npm ci
 ```
+
+项目通过 `.nvmrc` 固定 Node 版本。nvm-windows 2 的 shim 模式可在项目目录中自动识别该文件，保留全局默认版本；使用其他模式时，先执行 `nvm use 24.21.0` 再检查版本。
 
 在项目根目录创建 `.env.local`，填入自己的阿里云凭据：
 
