@@ -1,57 +1,17 @@
 "use client";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { useState, useEffect, Suspense } from "react";
-import { UserCircle, Menu, X } from "lucide-react";
-import LoginDialog from "./auth/LoginDialog";
-import { useAuth } from "@/lib/store/auth";
-import { getCurrentUser } from "@/lib/api/user";
-import UserMenu from "./auth/UserMenu";
+import { useState } from "react";
+import { Menu, X } from "lucide-react";
 
-function HeaderContent() {
+export default function Header() {
   const pathname = usePathname();
-  const [isLoginDialogOpen, setIsLoginDialogOpen] = useState(false);
-  const { token, user, setUser, logout, setToken } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const searchParams = useSearchParams();
-  
-  // 获取用户信息
-  useEffect(() => {
-    if (token && !user) {
-      getCurrentUser(token)
-        .then(setUser)
-        .catch(() => {
-          // 如果获取用户信息失败，清除 token
-          logout();
-        });
-    }
-  }, [token, user, setUser, logout]);
-
-  // 处理登录回调中的 token
-  useEffect(() => {
-    const token = searchParams.get('token');
-    if (token) {
-      // 保存 token
-      setToken(token);
-      
-      // 获取用户信息
-      getCurrentUser(token)
-        .then(setUser)
-        .catch(() => {
-          logout();
-        });
-      
-      // 清除 URL 中的 token
-      const newUrl = window.location.pathname;
-      window.history.replaceState({}, '', newUrl);
-    }
-  }, [searchParams, setToken, setUser, logout]);
 
   const navItems = [
     { name: "证件照", href: "/" },
-    { name: "定价", href: "/pricing" },
-    { name: "关于我们", href: "/about" },
+    { name: "关于", href: "/about" },
   ];
 
   return (
@@ -62,7 +22,7 @@ function HeaderContent() {
             <Link 
               href="/" 
               className="flex items-center gap-2 text-lg font-bold hover:opacity-90 transition-opacity"
-              title="青石证件照工具 - AI全能证件照 - 智能证件照处理工具"
+              title="AI全能证件照 - 智能证件照处理工具"
             >
               <Image
                 src="/logo.png"
@@ -93,21 +53,10 @@ function HeaderContent() {
                 ))}
               </ul>
 
-              {/* 用户菜单 */}
-              <UserMenu
-                user={user}
-                onLogout={logout}
-                onLogin={() => setIsLoginDialogOpen(true)}
-              />
             </div>
 
             {/* 移动端菜单按钮 */}
             <div className="flex items-center gap-2 sm:hidden">
-              <UserMenu
-                user={user}
-                onLogout={logout}
-                onLogin={() => setIsLoginDialogOpen(true)}
-              />
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className="p-2 rounded-md hover:bg-foreground/5"
@@ -148,19 +97,6 @@ function HeaderContent() {
         )}
       </header>
 
-      {/* 登录对话框 */}
-      <LoginDialog
-        isOpen={isLoginDialogOpen}
-        onClose={() => setIsLoginDialogOpen(false)}
-      />
     </>
   );
 }
-
-export default function Header() {
-  return (
-    <Suspense fallback={null}>
-      <HeaderContent />
-    </Suspense>
-  );
-} 

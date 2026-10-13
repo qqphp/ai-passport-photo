@@ -45,11 +45,3 @@ next-env.d.ts
 
 # temp
 temp/
-
-# Database
-data/db/*
-!data/db/.gitkeep
-
-# wxpay/
-# !wxpay/.gitkeep
-

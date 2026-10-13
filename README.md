@@ -1,38 +1,86 @@
 # AI全能证件照
 
-## 项目简介
+一个无需注册或登录的证件照处理工具。网站提供「证件照」和「关于我们」两个页面，支持智能抠图、换底色、尺寸选择、裁剪、旋转和图片下载，不设会员或使用次数限制。
 
-AI全能证件照是一个在线证件照处理工具，支持智能抠图、一键换底色、尺寸裁剪等功能。
+## 功能
 
-## 项目地址
+- 点击或拖拽上传图片，调用阿里云高清人体分割接口去除背景。
+- 切换透明背景、预设底色或自定义颜色，实时查看处理效果。
+- 按证件类型搜索和选择尺寸，调整裁剪框。
+- 旋转图片、对比原图与效果图、下载结果或重新选择图片。
 
-[AI全能证件照](https://id.qqphp.site)
+## 技术栈
 
-## 项目技术栈
-- node v20.18.1
-- Next.js 14
-- Tailwind CSS
-- TypeScript
+- Node.js 20.18.1（当前本地运行版本）
+- Next.js 15.1.2、React 19、TypeScript
+- Tailwind CSS、Lucide 图标、Framer Motion
+- 阿里云图像分割 SDK、Sharp
 
-## 注意事项
-1. 需要配置环境变量
+## Windows 本地运行
+
+安装 nvm-windows 后，在 PowerShell 中安装并切换 Node：
+
+```powershell
+nvm install 20.18.1
+nvm use 20.18.1
+node --version
 ```
-# 创建文件
-touch .env.local
+
+进入项目目录并安装依赖：
+
+```powershell
+cd E:\codex\ai-passport-photo
+npm ci
 ```
-2. 在 layout.tsx 中配置 openGraph 地址
+
+在项目根目录创建 `.env.local`，填入自己的阿里云凭据：
+
+```dotenv
+ALICLOUD_ACCESS_KEY_ID=your_access_key_id
+ALICLOUD_ACCESS_KEY_SECRET=your_access_key_secret
 ```
-openGraph: {
-    url: "https://yuqian.site",
-    title: "AI全能证件照 - 智能证件照处理工具",
-    description: "专业的在线证件照处理工具，支持智能抠图、一键换底色、尺寸裁剪等功能。",
-    siteName: "AI全能证件照"
-}
+
+凭据仅用于服务端调用阿里云接口，账号需具有高清人体分割接口的调用权限。调用成本和配额遵循阿里云账号配置；站点不再检查用户会员次数。不要将 `.env.local` 或真实密钥提交到仓库。
+
+启动开发服务器：
+
+```powershell
+npm run dev
 ```
-3. 项目使用的端口是 3005
-4. 在 Next.js 14+ 中，只要在 app 目录下创建 sitemap.ts 文件，Next.js 就会自动在构建时生成 sitemap.xml
-5. 部署的时候需要配置好Sqlite数据库
+
+访问 [http://localhost:3005](http://localhost:3005)。终端按 `Ctrl+C` 停止服务。项目不需要数据库、微信登录配置或支付证书。
+
+## 构建与运行
+
+```powershell
+npm run build
+npm start
 ```
-npm run db:generate
-npm run db:push
-```
+
+也可以运行 `npm run build:start` 完成构建并启动。运行端口为 `3005`，构建和运行时均需提供上述阿里云环境变量。发布前按实际域名调整页面元信息和网站地图中的地址。
+
+## 图片要求
+
+| 项目 | 要求 |
+| --- | --- |
+| 格式 | JPG、JPEG、PNG、BMP |
+| 文件大小 | 不超过 40MB |
+| 宽度和高度 | 每个维度均为 32 至 6000 像素，包含边界 |
+
+不符合格式、大小或分辨率要求的图片会显示错误提示；抠图失败时可重新上传。
+
+## 处理流程与隐私
+
+1. 浏览器读取图片，通过 `POST /api/process-image` 上传图片数据，无需登录或携带令牌。
+2. 服务端验证图片、创建临时文件并调用阿里云抠图接口。
+3. 浏览器下载抠图结果，在浏览器中完成换底色、旋转、裁剪和保存。
+
+服务端在处理结束后清理临时图片文件，不建立用户、订单或会员数据库。抠图会将图片提交给阿里云，第三方处理规则以阿里云服务为准，并非所有处理都在本地完成。
+
+## 页面与链接
+
+- `/`：证件照工具。
+- `/about`：关于我们。
+- 原 `/pricing`、账户和支付接口已移除，访问返回 404。
+- [阿雷博客](https://qqphp.com)
+- [开源地址](https://github.com)

@@ -39,12 +39,12 @@ export default function About() {
 
   const privacyFeatures = [
     {
-      title: "本地处理",
-      description: "所有图片处理都在您的浏览器中完成，无需上传服务器"
+      title: "图片处理",
+      description: "抠图经服务端调用阿里云，背景色、旋转、裁剪和下载在浏览器中完成"
     },
     {
       title: "隐私保护",
-      description: "不保存任何用户数据和图片信息，确保您的隐私安全"
+      description: "无需注册或登录，服务端临时图片文件在处理结束后清理"
     },
     {
       title: "安全可靠",
@@ -131,7 +131,7 @@ export default function About() {
                   transition={{ delay: 0.3 }}
                   viewport={{ once: true }}
                 >
-                  我们深知您对数据安全的关注，因此采用最严格的隐私保护措施。
+                  我们重视您的隐私，并清晰说明图片上传、处理及临时文件清理方式。
                 </motion.p>
                 <div className="grid gap-4">
                   {privacyFeatures.map((feature, index) => (
@@ -227,7 +227,7 @@ export default function About() {
           </p>
           <p className="text-foreground/80">
             <span className="font-medium">安全可靠：</span>
-            注重用户隐私保护，所有处理均在本地完成，无需担心数据泄露。
+            无需注册或登录，抠图经服务端调用阿里云，后续编辑在浏览器中完成。
           </p>
         </div>
       </motion.div>

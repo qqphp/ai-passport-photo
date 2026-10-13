@@ -1,3 +1,0 @@
-interface Window {
-  WxLogin: any;
-} 

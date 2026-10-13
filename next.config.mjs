@@ -11,16 +11,6 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'thirdwx.qlogo.cn',
-        port: '',
-        pathname: '/**',
-      },
-    ],
-  },
   experimental: {
     serverActions: true,
   },

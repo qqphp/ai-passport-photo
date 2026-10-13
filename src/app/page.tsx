@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useRef, useCallback } from "react";
 import ImageUploader from "@/components/photo/ImageUploader";
 import ImagePreview from "@/components/photo/ImagePreview";
 import ToolPanel from "@/components/photo/ToolPanel";
@@ -9,14 +9,8 @@ import type { PhotoState, PhotoToolTab, PhotoSize } from "@/types/photo";
 import { ImageCropperRef } from "@/components/photo/ImageCropper";
 import Toast from "@/components/ui/Toast";
 import SizeCloud from "@/components/photo/SizeCloud";
-import { useSearchParams } from 'next/navigation';
-import { useAuth } from "@/lib/store/auth";
-import { useToast } from "@/components/ui/toast-context";
 
 export default function Home() {
-  const searchParams = useSearchParams();
-  const { token } = useAuth();
-  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<PhotoToolTab>("background");
   const [photoState, setPhotoState] = useState<PhotoState>({
     originalImage: null,
@@ -34,17 +28,6 @@ export default function Home() {
   const [rotation, setRotation] = useState<number>(0);
   const [selectedSize, setSelectedSize] = useState<PhotoSize | null>(null);
 
-  useEffect(() => {
-    const token = searchParams.get('token');
-    if (token) {
-      // 保存 token 到 localStorage
-      localStorage.setItem('token', token);
-      // 清除 URL 中的 token 参数
-      const newUrl = window.location.pathname;
-      window.history.replaceState({}, '', newUrl);
-    }
-  }, [searchParams]);
-
   const getLoadingMessage = (progress: LoadingProgress) => {
     switch (progress.stage) {
       case 'uploading':
@@ -58,79 +41,8 @@ export default function Home() {
     }
   };
 
-  const handleProcess = useCallback(async (imageUrl: string) => {
-    if (!token) {
-      toast({
-        title: "请先登录",
-        description: "登录后即可使用图片处理功能",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsProcessing(true);
-    try {
-      // 先调用 usage/update API 检查和更新使用次数
-      const usageResponse = await fetch('/api/user/usage/update', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!usageResponse.ok) {
-        const data = await usageResponse.json();
-        if (usageResponse.status === 403) {
-          toast({
-            title: "使用次数不足",
-            description: "请升级会员以获取更多使用次数",
-            variant: "destructive",
-          });
-          return;
-        }
-        throw new Error('Failed to update usage');
-      }
-
-      // 继续处理图片
-      const processResponse = await fetch('/api/photo/process', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ imageUrl }),
-      });
-
-      if (!processResponse.ok) {
-        throw new Error('Failed to process image');
-      }
-
-      const result = await processResponse.json();
-      // 处理结果...
-
-    } catch (error) {
-      console.error('Process error:', error);
-      toast({
-        title: "处理失败",
-        description: "请稍后重试",
-        variant: "destructive",
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [token, toast]);
-
   const handleImageUpload = async (file: File) => {
     try {
-      if (!token) {
-        toast({
-          title: "请先登录",
-          description: "登录后即可使用图片处理功能",
-          variant: "destructive",
-        });
-        return;
-      }
-
       setIsProcessing(true);
       
       // 将文件转换为 base64
@@ -140,27 +52,6 @@ export default function Home() {
       // 处理图片
       await processImage(base64Image, 'transparent', 0);
       
-      // 图片处理成功后，再更新使用次数
-      const usageResponse = await fetch('/api/user/usage/update', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!usageResponse.ok) {
-        const data = await usageResponse.json();
-        if (usageResponse.status === 403) {
-          toast({
-            title: "使用次数不足",
-            description: "免费用户可使用2次，请升级会员以获取更多使用次数",
-            variant: "destructive",
-          });
-          return;
-        }
-        throw new Error('Failed to update usage');
-      }
-
       // 更新状态
       setPhotoState(prev => ({
         ...prev,
