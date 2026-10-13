@@ -8,7 +8,6 @@ import { removeBackground, type LoadingProgress } from "@/services/image-process
 import type { PhotoState, PhotoToolTab, PhotoSize } from "@/types/photo";
 import { ImageCropperRef } from "@/components/photo/ImageCropper";
 import Toast from "@/components/ui/Toast";
-import ServiceDialog from "@/components/ServiceDialog";
 import SizeCloud from "@/components/photo/SizeCloud";
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from "@/lib/store/auth";
@@ -510,7 +509,6 @@ export default function Home() {
 
   return (
     <>
-      <ServiceDialog />
       {error && (
         <Toast
           message={error}
