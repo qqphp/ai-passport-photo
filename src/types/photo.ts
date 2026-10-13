@@ -4,8 +4,7 @@ export interface PhotoState {
   originalImage: string | null;
   processedImage: string | null;
   rotation?: number;
-  backgroundColor: string;
-} 
+}
 
 export interface PhotoSize {
   id: string;
@@ -26,4 +25,4 @@ export interface PhotoCategory {
   name: string;
   subcategories?: PhotoCategory[];
   sizes?: PhotoSize[];
-} 
+}

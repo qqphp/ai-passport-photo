@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef, useCallback, useEffect, useImperativeHandle, forwardRef } from 'react';
-import ReactCrop, { type Crop, PixelCrop } from 'react-image-crop';
+import ReactCrop, { type Crop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 import type { PhotoSize } from '@/types/photo';
 
@@ -11,7 +11,6 @@ export interface ImageCropperRef {
 interface ImageCropperProps {
   image: string;
   photoSize: PhotoSize;
-  onCropComplete?: (croppedImageUrl: string) => void;
   disabled?: boolean;
   backgroundColor?: string;
   rotation?: number;
@@ -22,7 +21,7 @@ function createCrop(
   mediaHeight: number,
   photoSize: PhotoSize,
   previousCrop?: Crop,
-) {
+): Crop {
   // 确保输入值有效
   if (!mediaWidth || !mediaHeight || mediaWidth <= 0 || mediaHeight <= 0) {
     return {
@@ -34,20 +33,8 @@ function createCrop(
     };
   }
 
-  // 计算图片的显示尺寸，确保图片完全适应容器
-  const containerRatio = mediaWidth / mediaHeight;
-  const imageRatio = mediaWidth / mediaHeight;
-  let displayWidth, displayHeight;
-
-  if (imageRatio > containerRatio) {
-    // 图片较宽，以容器宽度为准
-    displayWidth = mediaWidth;
-    displayHeight = mediaWidth / imageRatio;
-  } else {
-    // 图片较高，以容器高度为准
-    displayHeight = mediaHeight;
-    displayWidth = mediaHeight * imageRatio;
-  }
+  let displayWidth = mediaWidth;
+  let displayHeight = mediaHeight;
 
   // 应用缩放系数以确保图片不会过大
   const maxDimension = 800; // 设置最大尺寸
@@ -105,7 +92,6 @@ function createCrop(
 export default forwardRef<ImageCropperRef, ImageCropperProps>(function ImageCropper({
   image,
   photoSize,
-  onCropComplete,
   disabled = false,
   backgroundColor = 'transparent',
   rotation = 0,
@@ -113,7 +99,7 @@ export default forwardRef<ImageCropperRef, ImageCropperProps>(function ImageCrop
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const [crop, setCrop] = useState<Crop>();
-  const previousCropRef = useRef<Crop>();
+  const previousCropRef = useRef<Crop | undefined>(undefined);
   const [imageSize, setImageSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
 
   // 当裁剪区域变化时更新位置
@@ -251,4 +237,4 @@ export default forwardRef<ImageCropperRef, ImageCropperProps>(function ImageCrop
       </div>
     </div>
   );
-}); 
+});

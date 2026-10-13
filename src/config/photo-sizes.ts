@@ -1,4 +1,4 @@
-import type { PhotoCategory } from "@/types/photo";
+import type { PhotoCategory, PhotoSize } from "@/types/photo";
 import photoData from "@/data/merged_response.json";
 
 // 处理原始数据
@@ -6,17 +6,7 @@ const processPhotoData = () => {
   const data = photoData.data.list;
   
   // 标准证件照
-  const standardPhotos = data.filter(item => item.print === 1).map(item => ({
-    id: `photo-${item.id}`,
-    name: item.name,
-    width: item.width,
-    height: item.height,
-    print: item.print as 1 | 2,
-    specs: item.specs,
-    sd_width: item.sd_width,
-    sd_height: item.sd_height,
-    sd_dpi: item.sd_dpi,
-  }));
+  const standardPhotos = data.filter(item => item.print === 1);
 
   // 考试报名照
   const examPhotos = data.filter(item => 
@@ -107,16 +97,18 @@ const {
   educationPhotos,
 } = processPhotoData();
 
-const mapPhotoToSize = (photo: any) => ({
+export const mapPhotoToSize = (photo: (typeof photoData.data.list)[number]): PhotoSize => ({
   id: `photo-${photo.id}`,
   name: photo.name,
   width: photo.width,
   height: photo.height,
-  print: photo.print,
+  print: photo.print as 1 | 2,
   specs: photo.specs,
   sd_width: photo.sd_width,
   sd_height: photo.sd_height,
   sd_dpi: photo.sd_dpi,
+  sd_size_min: photo.sd_size_min,
+  sd_size_max: photo.sd_size_max,
 });
 
 export const photoCategories: PhotoCategory[] = [
@@ -195,4 +187,4 @@ export const photoCategories: PhotoCategory[] = [
       },
     ],
   },
-]; 
+];

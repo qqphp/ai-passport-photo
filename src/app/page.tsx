@@ -1,12 +1,12 @@
 "use client";
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import ImageUploader from "@/components/photo/ImageUploader";
 import ImagePreview from "@/components/photo/ImagePreview";
 import ToolPanel from "@/components/photo/ToolPanel";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import { removeBackground, type LoadingProgress } from "@/services/image-processing";
 import type { PhotoState, PhotoToolTab, PhotoSize } from "@/types/photo";
-import { ImageCropperRef } from "@/components/photo/ImageCropper";
+import type { ImageCropperRef } from "@/components/photo/ImageCropper";
 import Toast from "@/components/ui/Toast";
 import SizeCloud from "@/components/photo/SizeCloud";
 
@@ -16,17 +16,23 @@ export default function Home() {
     originalImage: null,
     processedImage: null,
     rotation: 0,
-    backgroundColor: "transparent",
   });
   const [isProcessing, setIsProcessing] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState<LoadingProgress | null>(null);
   const [currentSize, setCurrentSize] = useState<PhotoSize | undefined>();
   const imageCropperRef = useRef<ImageCropperRef>(null);
+  const originalImageUrlRef = useRef<string | null>(null);
   const [currentBackgroundColor, setCurrentBackgroundColor] = useState("transparent");
   const [error, setError] = useState<string | null>(null);
-  const [backgroundColor, setBackgroundColor] = useState<string>('#FFFFFF');
-  const [rotation, setRotation] = useState<number>(0);
-  const [selectedSize, setSelectedSize] = useState<PhotoSize | null>(null);
+
+  const releaseOriginalImage = useCallback(() => {
+    if (originalImageUrlRef.current) {
+      URL.revokeObjectURL(originalImageUrlRef.current);
+      originalImageUrlRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => releaseOriginalImage, [releaseOriginalImage]);
 
   const getLoadingMessage = (progress: LoadingProgress) => {
     switch (progress.stage) {
@@ -42,28 +48,34 @@ export default function Home() {
   };
 
   const handleImageUpload = async (file: File) => {
+    releaseOriginalImage();
+    const imageUrl = URL.createObjectURL(file);
+    originalImageUrlRef.current = imageUrl;
+    let completed = false;
+
     try {
       setIsProcessing(true);
       
       // 将文件转换为 base64
       const base64Image = await fileToBase64(file);
-      const imageUrl = URL.createObjectURL(file);
       
       // 处理图片
-      await processImage(base64Image, 'transparent', 0);
+      const processedImage = await removeBackground(base64Image, setLoadingProgress);
+      if (originalImageUrlRef.current !== imageUrl) return;
+      completed = true;
       
       // 更新状态
-      setPhotoState(prev => ({
-        ...prev,
+      setPhotoState({
         originalImage: imageUrl,
+        processedImage,
         rotation: 0,
-        backgroundColor: 'transparent',
-      }));
+      });
       
       setCurrentBackgroundColor('transparent');
       setCurrentSize(undefined);
       setActiveTab('background');
     } catch (error) {
+      if (originalImageUrlRef.current !== imageUrl) return;
       if (error instanceof Error) {
         setError(error.message);
       } else {
@@ -75,11 +87,13 @@ export default function Home() {
         originalImage: null,
         processedImage: null,
         rotation: 0,
-        backgroundColor: 'transparent',
       }));
     } finally {
-      setIsProcessing(false);
-      setLoadingProgress(null);
+      if (originalImageUrlRef.current === imageUrl) {
+        if (!completed) releaseOriginalImage();
+        setIsProcessing(false);
+        setLoadingProgress(null);
+      }
     }
   };
 
@@ -101,10 +115,6 @@ export default function Home() {
   const handleBackgroundChange = (color: string) => {
     if (!photoState.processedImage) return;
     setCurrentBackgroundColor(color);
-    setPhotoState(prev => ({
-      ...prev,
-      backgroundColor: color,
-    }));
   };
 
   const handleSizeChange = (size: PhotoSize) => {
@@ -114,11 +124,11 @@ export default function Home() {
   };
 
   const handleReselect = () => {
+    releaseOriginalImage();
     setPhotoState({
       originalImage: null,
       processedImage: null,
       rotation: 0,
-      backgroundColor: 'transparent',
     });
   };
 
@@ -305,89 +315,11 @@ export default function Home() {
     }
   };
 
-  const handleCropComplete = (croppedImage: string) => {
-    setPhotoState(prev => ({
-      ...prev,
-      processedImage: croppedImage,
-    }));
-  };
-
-  const processImage = async (imageData: string, backgroundColor: string, rotation: number) => {
-    try {
-      setIsProcessing(true);
-      
-      // 如果还没有处理过图片，先进行背景处理
-      if (!photoState.processedImage) {
-        const processedImageUrl = await removeBackground(
-          imageData,
-          setLoadingProgress
-        );
-        
-        // 保存处理后的图片
-        setPhotoState(prev => ({
-          ...prev,
-          processedImage: processedImageUrl,
-          rotation: rotation,
-          backgroundColor: backgroundColor,
-        }));
-      } else {
-        // 如果已经处理过图片，直接更新状态
-        setPhotoState(prev => ({
-          ...prev,
-          rotation: rotation,
-          backgroundColor: backgroundColor,
-        }));
-      }
-    } catch (error) {
-      console.error("图片处理失败:", error);
-      throw error;
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  async function handleRotation(imageUrl: string, rotation: number): Promise<string> {
-    return new Promise<string>((resolve, reject) => {
-      const img = new Image();
-      img.src = imageUrl;
-      img.onerror = reject;
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        
-        // 根据旋转角度调整 canvas 尺寸
-        if (rotation === 90 || rotation === 270) {
-          canvas.width = img.height;
-          canvas.height = img.width;
-        } else {
-          canvas.width = img.width;
-          canvas.height = img.height;
-        }
-        
-        if (!ctx) return resolve(imageUrl);
-        
-        // 移动到 canvas 中心点并旋转
-        ctx.translate(canvas.width / 2, canvas.height / 2);
-        ctx.rotate((rotation * Math.PI) / 180);
-        ctx.drawImage(
-          img,
-          -img.width / 2,
-          -img.height / 2,
-          img.width,
-          img.height
-        );
-        
-        resolve(canvas.toDataURL('image/png'));
-      };
-    });
-  }
-
   const handleReset = useCallback(() => {
     // 重置所有相关状态
     setPhotoState(prev => ({
       ...prev,
       rotation: 0,
-      backgroundColor: 'transparent',
     }));
     setCurrentBackgroundColor('transparent');
     setCurrentSize(undefined);
@@ -433,7 +365,6 @@ export default function Home() {
                 isProcessing={isProcessing}
                 onReselect={handleReselect}
                 onSave={handleSave}
-                onCropComplete={handleCropComplete}
                 backgroundColor={currentBackgroundColor}
               />
             )}

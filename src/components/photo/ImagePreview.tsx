@@ -1,17 +1,16 @@
 "use client";
-import { forwardRef, useState, useEffect } from 'react';
+import { forwardRef, useState } from 'react';
 import ImageCropper, { type ImageCropperRef } from './ImageCropper';
 import type { PhotoSize } from '@/types/photo';
 
 interface ImagePreviewProps {
-  originalImage: string | null;
+  originalImage: string;
   processedImage: string | null;
   currentSize?: PhotoSize;
   rotation?: number;
   isProcessing?: boolean;
   onReselect: () => void;
   onSave: () => void;
-  onCropComplete?: (croppedImageUrl: string) => void;
   backgroundColor: string;
 }
 
@@ -46,7 +45,6 @@ const ImagePreview = forwardRef<ImageCropperRef, ImagePreviewProps>(function Ima
   isProcessing = false,
   onReselect,
   onSave,
-  onCropComplete,
   backgroundColor,
 }, ref) {
   const [showProcessed, setShowProcessed] = useState(true);
@@ -88,13 +86,12 @@ const ImagePreview = forwardRef<ImageCropperRef, ImagePreviewProps>(function Ima
       {/* 图片预览区域 */}
       <div className="aspect-[4/3] relative border rounded-lg overflow-hidden bg-gray-50">
         <div className="absolute inset-0">
-          {showProcessed ? (
+          {showProcessed && processedImage ? (
             currentSize ? (
               <ImageCropper
                 ref={ref}
                 image={processedImage}
                 photoSize={currentSize}
-                onCropComplete={onCropComplete}
                 disabled={isProcessing}
                 backgroundColor={backgroundColor}
                 rotation={rotation}
@@ -160,4 +157,4 @@ const ImagePreview = forwardRef<ImageCropperRef, ImagePreviewProps>(function Ima
   );
 });
 
-export default ImagePreview; 
+export default ImagePreview;

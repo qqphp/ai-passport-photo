@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import photoData from "@/data/merged_response.json";
+import { mapPhotoToSize } from "@/config/photo-sizes";
 import type { PhotoSize } from "@/types/photo";
 
 interface PhotoSearchProps {
@@ -64,19 +65,7 @@ export default function PhotoSearch({ onSelect, disabled = false }: PhotoSearchP
   }, []);
 
   const handleSelect = (item: typeof photoData.data.list[0]) => {
-    onSelect({
-      id: `photo-${item.id}`,
-      name: item.name,
-      width: item.width,
-      height: item.height,
-      print: item.print as 1 | 2,
-      specs: item.specs,
-      sd_width: item.sd_width,
-      sd_height: item.sd_height,
-      sd_dpi: item.sd_dpi,
-      sd_size_min: item.sd_size_min,
-      sd_size_max: item.sd_size_max,
-    });
+    onSelect(mapPhotoToSize(item));
     setSearchTerm("");
     setIsOpen(false);
   };
@@ -140,4 +129,4 @@ export default function PhotoSearch({ onSelect, disabled = false }: PhotoSearchP
       )}
     </div>
   );
-} 
+}
